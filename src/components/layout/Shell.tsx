@@ -1,5 +1,6 @@
 "use client";
 
+import { useSiteUrl } from "@/hooks/useSiteUrl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,7 +11,7 @@ import { contentTypesApi, pagesApi } from "@/features/content/api";
 import { pendingTotal, SUBMISSIONS_CHANGED, submissionsApi } from "@/features/submissions/api";
 import { useQuery } from "@/hooks/useQuery";
 import { cn } from "@/lib/cn";
-import { ROLE_LABELS, siteUrl } from "@/lib/format";
+import { ROLE_LABELS } from "@/lib/format";
 import { NAV_GROUPS, type NavEntry, type SubLink } from "./nav";
 
 type SubLinks = Partial<Record<NonNullable<NavEntry["children"]>, SubLink[]>>;
@@ -30,6 +31,7 @@ type Badges = Partial<Record<NonNullable<NavEntry["badge"]>, number>>;
 function Sidebar({ subLinks, badges, onNavigate }: { subLinks: SubLinks; badges: Badges; onNavigate?: () => void }) {
   const pathname = usePathname();
   const { user, can, logout } = useAuth();
+  const viewUrl = useSiteUrl();
   // Submenus the user opened or closed by hand; otherwise a submenu is open while its section is active.
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const visible = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => can(...i.permissions)) })).filter((g) => g.items.length);
@@ -134,7 +136,7 @@ function Sidebar({ subLinks, badges, onNavigate }: { subLinks: SubLinks; badges:
 
       <div className="shrink-0 border-t border-white/10 p-3">
         <a
-          href={siteUrl("/")}
+          href={viewUrl("/")}
           target="_blank"
           rel="noopener noreferrer"
           className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-white/70 hover:bg-white/5 hover:text-white"

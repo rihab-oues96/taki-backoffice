@@ -1,5 +1,6 @@
 "use client";
 
+import { useSiteUrl } from "@/hooks/useSiteUrl";
 import { useParams } from "next/navigation";
 import { ExternalLink, Settings2 } from "lucide-react";
 import { useState } from "react";
@@ -14,11 +15,11 @@ import { pagesApi, sectionsApi } from "@/features/content/api";
 import { ContentEditor } from "@/features/content/ContentEditor";
 import { StructureModal } from "@/features/content/StructureModal";
 import { useQuery } from "@/hooks/useQuery";
-import { siteUrl } from "@/lib/format";
 
 export default function SectionEditorPage() {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
+  const viewUrl = useSiteUrl();
   const { can } = useAuth();
   const { data: section, error, loading, reload, setData } = useQuery((signal) => sectionsApi.get(id, signal), [id]);
   const pages = useQuery((signal) => pagesApi.list(signal), []);
@@ -55,7 +56,7 @@ export default function SectionEditorPage() {
             actions={
               <>
                 {page && (
-                  <ButtonLink href={siteUrl(page.path)} external variant="ghost" size="sm" icon={<ExternalLink size={15} aria-hidden />}>
+                  <ButtonLink href={viewUrl(page.path)} external variant="ghost" size="sm" icon={<ExternalLink size={15} aria-hidden />}>
                     Voir sur le site
                   </ButtonLink>
                 )}
