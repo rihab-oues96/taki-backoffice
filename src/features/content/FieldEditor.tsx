@@ -1,14 +1,15 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronDown, Copy, ImagePlus, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Copy, ImagePlus, Plus, Trash2, Upload, X } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Field, Input, Select, Switch, Textarea } from "@/components/ui/Form";
 import { MediaPicker } from "@/features/media/MediaPicker";
 import { MediaThumb } from "@/features/media/MediaThumb";
 import { cn } from "@/lib/cn";
+import { mediaSrc } from "@/lib/format";
 import type { ContentObject, ContentValue, FieldDef } from "@/lib/types";
-import { conform, emptyValue, hasIssueUnder, summarize } from "./fields";
+import { conform, emptyValue, hasIssueUnder, isVideoFile, isYoutubeLink, summarize } from "./fields";
 
 interface EditorProps {
   field: FieldDef;
@@ -136,6 +137,9 @@ function ScalarEditor({ field, value, onChange, path, issues, disabled }: Editor
     case "youtube":
       control = <Input id={id} type="url" inputMode="url" value={text} disabled={disabled} invalid={Boolean(error)} onChange={(e) => onChange(e.target.value.trim())} placeholder="https://www.youtube.com/watch?v=…" className="font-mono text-[13.5px]" />;
       break;
+    case "video":
+      control = <VideoInput id={id} value={text} onChange={onChange} disabled={disabled} invalid={Boolean(error)} label={field.label} />;
+      break;
     case "textarea":
       control = <Textarea id={id} value={text} minRows={3} disabled={disabled} invalid={Boolean(error)} onChange={(e) => onChange(e.target.value)} />;
       break;
@@ -186,6 +190,52 @@ function ImageInput({ id, value, onChange, disabled, label }: { id: string; valu
         </div>
       </div>
       <MediaPicker
+        open={open}
+        selectedUrl={value}
+        onClose={() => setOpen(false)}
+        onSelect={(media) => {
+          onChange(media.url);
+          setOpen(false);
+        }}
+      />
+    </div>
+  );
+}
+
+/** A video: paste a YouTube link, or pick / upload a file from the media library. */
+function VideoInput({ id, value, onChange, disabled, invalid, label }: { id: string; value: string; onChange: (v: string) => void; disabled?: boolean; invalid?: boolean; label: string }) {
+  const [open, setOpen] = useState(false);
+  const file = isVideoFile(value);
+  const source = file ? "Vidéo importée" : isYoutubeLink(value) ? "Vidéo YouTube" : "";
+  return (
+    <div className="space-y-2.5 rounded-xl border border-line bg-white p-3">
+      <Input
+        id={id}
+        type="text"
+        inputMode="url"
+        value={value}
+        disabled={disabled}
+        invalid={invalid}
+        onChange={(e) => onChange(e.target.value.trim())}
+        placeholder="https://www.youtube.com/watch?v=…"
+        className="font-mono text-[13.5px]"
+      />
+      {file && (
+        <video key={value} src={mediaSrc(value)} controls muted preload="metadata" className="aspect-video w-full max-w-sm rounded-lg border border-line bg-black" />
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="line" size="sm" disabled={disabled} icon={<Upload size={14} aria-hidden />} onClick={() => setOpen(true)} aria-label={`Importer ou choisir une vidéo : ${label}`}>
+          {file ? "Changer de vidéo" : "Importer une vidéo"}
+        </Button>
+        {value && (
+          <Button variant="ghost" size="sm" disabled={disabled} icon={<X size={14} aria-hidden />} onClick={() => onChange("")}>
+            Retirer
+          </Button>
+        )}
+        {source && <span className="ml-auto rounded-full bg-mist px-2.5 py-1 text-xs font-bold text-muted">{source}</span>}
+      </div>
+      <MediaPicker
+        kind="video"
         open={open}
         selectedUrl={value}
         onClose={() => setOpen(false)}

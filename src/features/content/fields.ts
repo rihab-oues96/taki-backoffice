@@ -7,6 +7,7 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   image: "Image",
   url: "Lien",
   youtube: "Vidéo YouTube (lien)",
+  video: "Vidéo (lien YouTube ou fichier)",
   number: "Nombre",
   boolean: "Oui / Non",
   select: "Liste de choix",
@@ -109,6 +110,11 @@ export function isYoutubeLink(link: string): boolean {
   }
 }
 
+/** True for the address of a video file (media library or elsewhere). Mirrors the API. */
+export function isVideoFile(value: string): boolean {
+  return /^(\/(?!\/)|https?:\/\/)[^\s]+\.(mp4|webm)(\?[^\s]*)?$/i.test(value);
+}
+
 /** Client-side checks mirroring the API's sanitiser, for immediate feedback. */
 export function validateContent(fields: FieldDef[], value: ContentObject, prefix = ""): FieldIssue[] {
   const issues: FieldIssue[] = [];
@@ -121,6 +127,9 @@ export function validateContent(fields: FieldDef[], value: ContentObject, prefix
     }
     if (field.type === "youtube" && typeof v === "string" && !isYoutubeLink(v)) {
       issues.push({ path, message: "Collez le lien d'une vidéo YouTube, par exemple https://www.youtube.com/watch?v=…" });
+    }
+    if (field.type === "video" && typeof v === "string" && !isYoutubeLink(v) && !isVideoFile(v)) {
+      issues.push({ path, message: "Collez le lien d'une vidéo YouTube, ou importez une vidéo (MP4, WebM)" });
     }
     if (field.type === "group" && typeof v === "object" && !Array.isArray(v)) {
       for (const f of field.fields ?? []) visit(f, v[f.name], `${path}.${f.name}`);

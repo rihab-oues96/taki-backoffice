@@ -40,6 +40,7 @@ export type FieldType =
   | "image"
   | "url"
   | "youtube"
+  | "video"
   | "number"
   | "boolean"
   | "select"
