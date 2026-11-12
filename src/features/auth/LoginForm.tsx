@@ -67,7 +67,7 @@ export function LoginForm() {
           value={values.email}
           invalid={Boolean(errors.email)}
           onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
-          placeholder="prenom.nom@ibtakiacademyschool.com"
+          placeholder="nomcomplet@takiacademyteam.com"
         />
       </Field>
       <Field label="Mot de passe" htmlFor="password" error={errors.password}>
