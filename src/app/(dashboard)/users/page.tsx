@@ -4,7 +4,7 @@ import { KeyRound, Pencil, Search, Trash2, UserPlus, Users } from "lucide-react"
 import { useState } from "react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Badge, EmptyState, ErrorState, SkeletonList } from "@/components/ui/Feedback";
-import { Input, Select, Switch } from "@/components/ui/Form";
+import { Input, Select } from "@/components/ui/Form";
 import { PageHeader } from "@/components/ui/Layout";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { Table, Td, Th, Tr } from "@/components/ui/Table";
@@ -31,22 +31,11 @@ export default function UsersPage() {
   const [toDelete, setToDelete] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
   const debounced = useDebounced(search);
-  const { data, error, loading, reload, setData } = useQuery((signal) => usersApi.list({ search: debounced, role }, signal), [debounced, role]);
+  const { data, error, loading, reload } = useQuery((signal) => usersApi.list({ search: debounced, role }, signal), [debounced, role]);
 
   const manage = can("users:manage");
   // Super admin accounts can only be managed by a super admin.
   const editable = (u: User) => manage && (u.role !== "super_admin" || me.role === "super_admin");
-
-  async function toggleActive(user: User, active: boolean) {
-    setData((list) => list?.map((u) => (u.id === user.id ? { ...u, active } : u)));
-    try {
-      await usersApi.update(user.id, { active });
-      toast.success(active ? `${user.name} peut à nouveau se connecter` : `${user.name} ne peut plus se connecter`);
-    } catch (err) {
-      setData((list) => list?.map((u) => (u.id === user.id ? { ...u, active: !active } : u)));
-      toast.fromError(err);
-    }
-  }
 
   async function remove() {
     if (!toDelete) return;
@@ -139,12 +128,9 @@ export default function UsersPage() {
                     <Badge tone={ROLE_TONES[u.role]}>{ROLE_LABELS[u.role]}</Badge>
                   </Td>
                   <Td>
-                    <span className="inline-flex items-center gap-2.5">
-                      {editable(u) && !self && <Switch size="sm" checked={u.active} onChange={(v) => void toggleActive(u, v)} label={u.active ? "Désactiver le compte" : "Activer le compte"} />}
-                      <Badge tone={u.active ? "success" : "neutral"} dot>
-                        {u.active ? "Actif" : "Désactivé"}
-                      </Badge>
-                    </span>
+                    <Badge tone={u.active ? "success" : "neutral"} dot>
+                      {u.active ? "Actif" : "Désactivé"}
+                    </Badge>
                   </Td>
                   <Td className="whitespace-nowrap text-[13px] text-muted">{u.lastLoginAt ? timeAgo(u.lastLoginAt) : "Jamais"}</Td>
                   <Td>
