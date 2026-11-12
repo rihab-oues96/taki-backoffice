@@ -1,6 +1,6 @@
 import type { ActivityAction, ActivityTarget, Role } from "./types";
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://taki-ib.vercel.app").replace(/\/$/, "");
 
 export const siteUrl = (path = "/") => `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSiteUrl } from "@/hooks/useSiteUrl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, ExternalLink, Eye, Lock, Pencil, Plus, Rows3, Trash2 } from "lucide-react";
@@ -15,13 +16,14 @@ import { RequirePermission } from "@/features/auth/Guard";
 import { pagesApi, previewApi, sectionsApi } from "@/features/content/api";
 import { NewSectionModal } from "@/features/content/NewSectionModal";
 import { useQuery } from "@/hooks/useQuery";
-import { siteUrl, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
 import type { SectionSummary } from "@/lib/types";
 
 export default function PageSectionsPage() {
   const { page: pageKey } = useParams<{ page: string }>();
   const router = useRouter();
   const toast = useToast();
+  const viewUrl = useSiteUrl();
   const { can } = useAuth();
   const pages = useQuery((signal) => pagesApi.list(signal), []);
   const sections = useQuery((signal) => sectionsApi.list(pageKey, signal), [pageKey]);
@@ -99,7 +101,7 @@ export default function PageSectionsPage() {
           <>
             {!isGlobal && page && (
               <>
-                <ButtonLink href={siteUrl(page.path)} external variant="ghost" size="sm" icon={<ExternalLink size={15} aria-hidden />}>
+                <ButtonLink href={viewUrl(page.path)} external variant="ghost" size="sm" icon={<ExternalLink size={15} aria-hidden />}>
                   Voir la page
                 </ButtonLink>
                 {(page.drafts ?? 0) > 0 && (

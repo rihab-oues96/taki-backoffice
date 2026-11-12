@@ -1,5 +1,6 @@
 "use client";
 
+import { useSiteUrl } from "@/hooks/useSiteUrl";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -9,7 +10,6 @@ import { Card, PageHeader } from "@/components/ui/Layout";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { siteUrl } from "@/lib/format";
 import type { ContentType, Entry } from "@/lib/types";
 import { entriesApi } from "./api";
 import { ContentEditor } from "./ContentEditor";
@@ -21,6 +21,7 @@ const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export function EntryEditor({ type, entry, onChange }: { type: ContentType; entry: Entry | null; onChange: (entry: Entry) => void }) {
   const router = useRouter();
   const toast = useToast();
+  const viewUrl = useSiteUrl();
   const { can } = useAuth();
   const [slug, setSlug] = useState(entry?.slug ?? "");
   const [savingMeta, setSavingMeta] = useState(false);
@@ -73,7 +74,7 @@ export function EntryEditor({ type, entry, onChange }: { type: ContentType; entr
         actions={
           <>
             {publicPath && entry?.visible && (
-              <ButtonLink href={siteUrl(publicPath)} external variant="ghost" size="sm" icon={<ExternalLink size={15} aria-hidden />}>
+              <ButtonLink href={viewUrl(publicPath)} external variant="ghost" size="sm" icon={<ExternalLink size={15} aria-hidden />}>
                 Voir sur le site
               </ButtonLink>
             )}
