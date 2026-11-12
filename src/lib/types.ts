@@ -187,11 +187,20 @@ export interface DashboardData {
     drafts: number;
     media: number;
     mediaBytes: number;
+    sectionDrafts: number;
     users: number | null;
-    /** Form submissions nobody has looked at yet; null when the role cannot see them. */
-    pendingSubmissions: number | null;
   };
-  contentTypes: { key: string; label: string; total: number }[];
+  contentTypes: { key: string; label: string; total: number; hidden: number; drafts: number }[];
+  mediaKinds: { kind: MediaKind; count: number; size: number }[];
+  /** Figures of the forms inbox; null when the role cannot see the submissions. */
+  submissions: SubmissionStats | null;
+  /** Figures of the team's activity over 30 days; null when the role cannot see the journal. */
+  activityStats: {
+    total: number;
+    days: { date: string; total: number }[];
+    byAction: { action: ActivityAction; total: number }[];
+    byUser: { userName: string; total: number }[];
+  } | null;
   recent: {
     kind: "section" | "entry";
     id: string;
@@ -272,3 +281,14 @@ export type SubmissionDetail = Omit<SubmissionItem, "type"> & {
 } & ({ type: "contact"; data: ContactData } | { type: "admission"; data: AdmissionData } | { type: "job"; data: JobData });
 
 export type SubmissionCounts = Record<SubmissionType, Record<SubmissionStatus, number>>;
+
+export interface SubmissionStats {
+  counts: SubmissionCounts;
+  /** Forms received per day (`YYYY-MM-DD`, school's timezone), oldest first, over the last 180 days. */
+  days: ({ date: string } & Record<SubmissionType, number>)[];
+  /** Average hours between reception and « Traitée »; null when nothing was handled yet. */
+  handling: { hours: number | null; sample: number; byType: Record<SubmissionType, number | null> };
+  oldestPendingAt: string | null;
+  latest: Pick<SubmissionItem, "id" | "type" | "reference" | "name" | "subject" | "status" | "createdAt">[];
+}
+
