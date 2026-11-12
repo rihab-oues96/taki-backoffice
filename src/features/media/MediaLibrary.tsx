@@ -22,7 +22,7 @@ const KIND_LABELS: Record<MediaKind, string> = { image: "Images", video: "Vidéo
  * The media library, used as a page (browse, upload, manage) and inside the picker
  * (`onSelect` set: clicking a file chooses it instead of opening its details).
  */
-export function MediaLibrary({ onSelect, selectedUrl, only }: { onSelect?: (media: Media) => void; selectedUrl?: string; only?: "image" }) {
+export function MediaLibrary({ onSelect, selectedUrl, only }: { onSelect?: (media: Media) => void; selectedUrl?: string; only?: "image" | "video" }) {
   const { can } = useAuth();
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState<MediaKind | "">(only ?? "");

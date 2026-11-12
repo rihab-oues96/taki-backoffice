@@ -10,7 +10,7 @@ import type { Media, MediaRule } from "@/lib/types";
 import { mediaApi } from "./api";
 
 /** Client-side check against the API's rules, to fail fast before uploading. The API re-checks everything. */
-export function checkFiles(files: File[], rules: MediaRule[], accept?: "image"): { ok: File[]; problems: string[] } {
+export function checkFiles(files: File[], rules: MediaRule[], accept?: "image" | "video"): { ok: File[]; problems: string[] } {
   const ok: File[] = [];
   const problems: string[] = [];
   for (const file of files) {
@@ -33,7 +33,7 @@ export function UploadZone({
   folder: string;
   onUploaded: (media: Media[]) => void;
   compact?: boolean;
-  accept?: "image";
+  accept?: "image" | "video";
 }) {
   const toast = useToast();
   const input = useRef<HTMLInputElement>(null);
@@ -41,7 +41,8 @@ export function UploadZone({
   const [busy, setBusy] = useState(false);
 
   const allowed = rules.filter((r) => !accept || r.kind === accept);
-  const maxImage = Math.max(0, ...rules.filter((r) => r.kind === "image").map((r) => r.maxBytes));
+  const limitKind = accept ?? "image";
+  const maxSize = Math.max(0, ...rules.filter((r) => r.kind === limitKind).map((r) => r.maxBytes));
 
   async function send(list: FileList | File[]) {
     const files = Array.from(list).slice(0, 10);
@@ -110,7 +111,7 @@ export function UploadZone({
           </p>
           <p className="mt-1 text-[13px] text-muted">
             {[...new Set(allowed.map((r) => r.ext.toUpperCase()))].join(", ")}
-            {maxImage > 0 && ` · images jusqu'à ${formatBytes(maxImage)}`} · 10 fichiers par envoi
+            {maxSize > 0 && ` · ${limitKind === "video" ? "vidéos" : "images"} jusqu'à ${formatBytes(maxSize)}`} · 10 fichiers par envoi
           </p>
         </>
       )}
