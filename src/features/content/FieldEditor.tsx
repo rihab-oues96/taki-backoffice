@@ -7,7 +7,7 @@ import { Field, Input, Select, Switch, Textarea } from "@/components/ui/Form";
 import { MediaPicker } from "@/features/media/MediaPicker";
 import { MediaThumb } from "@/features/media/MediaThumb";
 import { cn } from "@/lib/cn";
-import { mediaSrc } from "@/lib/format";
+import { mediaPath, mediaSrc } from "@/lib/format";
 import type { ContentObject, ContentValue, FieldDef } from "@/lib/types";
 import { conform, emptyValue, hasIssueUnder, isVideoFile, isYoutubeLink, summarize } from "./fields";
 
@@ -216,7 +216,7 @@ function VideoInput({ id, value, onChange, disabled, invalid, label }: { id: str
         value={value}
         disabled={disabled}
         invalid={invalid}
-        onChange={(e) => onChange(e.target.value.trim())}
+        onChange={(e) => onChange(mediaPath(e.target.value.trim()))}
         placeholder="https://www.youtube.com/watch?v=…"
         className="font-mono text-[13.5px]"
       />
