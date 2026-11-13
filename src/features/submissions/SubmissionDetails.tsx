@@ -186,6 +186,11 @@ function Details({ id, onClose, onChanged }: { id: string; onClose: () => void; 
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Badge tone={TYPE_TONES[data.type]}>{TYPE_LABELS[data.type]}</Badge>
+        {data.suspect && (
+          <span title="Le champ anti-robot du formulaire était rempli : envoi automatique possible.">
+            <Badge tone="warning">À vérifier</Badge>
+          </span>
+        )}
         <Badge tone={STATUS_TONES[data.status]} dot>
           {STATUS_LABELS[data.status]}
         </Badge>
