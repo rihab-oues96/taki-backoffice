@@ -6,6 +6,7 @@ import { Badge, EmptyState, ErrorState, SkeletonList } from "@/components/ui/Fee
 import { Card, PageHeader } from "@/components/ui/Layout";
 import { RequirePermission } from "@/features/auth/Guard";
 import { pagesApi } from "@/features/content/api";
+import { SHARED_PAGE } from "@/features/content/shared";
 import { useQuery } from "@/hooks/useQuery";
 import { timeAgo } from "@/lib/format";
 
@@ -33,7 +34,7 @@ export default function PagesPage() {
                 <Link href={`/pages/${page.key}`} className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-mist">
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-[15.5px] font-semibold tracking-[-0.01em] text-navy">{page.label}</h2>
-                    <p className="mt-0.5 truncate font-mono text-[12.5px] text-muted">{page.key === "global" ? "toutes les pages" : page.path}</p>
+                    <p className="mt-0.5 truncate font-mono text-[12.5px] text-muted">{page.key === SHARED_PAGE ? "toutes les pages" : page.path}</p>
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                     {page.drafts > 0 && <Badge tone="warning">{page.drafts} brouillon{page.drafts > 1 ? "s" : ""}</Badge>}

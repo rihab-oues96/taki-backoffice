@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, ExternalLink, Eye, Lock, Pencil, Plus, Rows3, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button, ButtonLink, IconButton } from "@/components/ui/Button";
-import { EmptyState, ErrorState, SkeletonList, StatusBadges } from "@/components/ui/Feedback";
+import { Badge, EmptyState, ErrorState, SkeletonList, StatusBadges } from "@/components/ui/Feedback";
 import { Switch } from "@/components/ui/Form";
 import { Card, PageHeader } from "@/components/ui/Layout";
 import { ConfirmDialog } from "@/components/ui/Modal";
@@ -15,6 +15,7 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { RequirePermission } from "@/features/auth/Guard";
 import { pagesApi, previewApi, sectionsApi } from "@/features/content/api";
 import { NewSectionModal } from "@/features/content/NewSectionModal";
+import { partsOfSection, partsOnPage, SHARED_PAGE, type SharedPart } from "@/features/content/shared";
 import { useQuery } from "@/hooks/useQuery";
 import { timeAgo } from "@/lib/format";
 import type { SectionSummary } from "@/lib/types";
@@ -34,7 +35,17 @@ export default function PageSectionsPage() {
 
   const page = pages.data?.find((p) => p.key === pageKey);
   const list = sections.data ?? [];
-  const isGlobal = pageKey === "global";
+  const isGlobal = pageKey === SHARED_PAGE;
+  // Shared content (contact details, portals…) edited from this page although it is stored with the common elements.
+  const hosted = partsOnPage(pageKey);
+  const needsShared = hosted.length > 0 && !isGlobal;
+  const shared = useQuery(async (signal) => (needsShared ? sectionsApi.list(SHARED_PAGE, signal) : []), [needsShared]);
+  const sharedSections = isGlobal ? list : shared.data ?? [];
+  const rows: { section: SectionSummary; part?: SharedPart }[] = [
+    // A shared section split into parts is listed through its parts, wherever they are attached.
+    ...list.filter((s) => !isGlobal || partsOfSection(s.key).length === 0).map((section) => ({ section })),
+    ...hosted.flatMap((part) => sharedSections.filter((s) => s.key === part.section).map((section) => ({ section, part }))),
+  ];
 
   async function toggle(section: SectionSummary, visible: boolean) {
     setBusyId(section.id);
@@ -124,26 +135,31 @@ export default function PageSectionsPage() {
         <SkeletonList rows={6} className="h-[76px]" />
       ) : sections.error ? (
         <ErrorState message={sections.error} onRetry={sections.reload} />
-      ) : list.length === 0 ? (
+      ) : rows.length === 0 ? (
         <EmptyState icon={<Rows3 size={24} aria-hidden />} title="Aucune section" text="Cette page n'a pas encore de section modifiable." />
       ) : (
         <ol className="space-y-2.5">
-          {list.map((section, index) => (
-            <li key={section.id}>
+          {rows.map(({ section, part }, index) => {
+            const href = part ? `/sections/${section.id}/${part.id}` : `/sections/${section.id}`;
+            const label = part?.label ?? section.label;
+            const shownEverywhere = isGlobal || part !== undefined;
+            return (
+            <li key={`${section.id}-${part?.id ?? ""}`}>
               <Card className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3.5 transition hover:border-brand/60 sm:px-5">
                 <span className="grid size-8 shrink-0 place-items-center rounded-full bg-sky text-[13px] font-bold text-brand-deep">{index + 1}</span>
-                <Link href={`/sections/${section.id}`} className="group min-w-0 flex-1 basis-[240px]">
+                <Link href={href} className="group min-w-0 flex-1 basis-[240px]">
                   <p className="flex items-center gap-2 truncate text-[15.5px] font-semibold text-navy group-hover:text-brand-deep">
-                    {section.label}
+                    {label}
                     {section.restricted && <Lock size={13} className="shrink-0 text-muted" aria-label="Réservée aux administrateurs" />}
                   </p>
                   <p className="truncate text-[13px] text-muted">
-                    {section.description || `Modifiée ${timeAgo(section.updatedAt)}${section.updatedByName ? ` par ${section.updatedByName}` : ""}`}
+                    {part?.description || section.description || `Modifiée ${timeAgo(section.updatedAt)}${section.updatedByName ? ` par ${section.updatedByName}` : ""}`}
                   </p>
                 </Link>
+                {part && !isGlobal && <Badge tone="brand">Commun à tout le site</Badge>}
                 <StatusBadges visible={section.visible} hasDraft={section.hasDraft} />
                 <div className="ml-auto flex items-center gap-1">
-                  {can("content:publish") && !isGlobal && (
+                  {can("content:publish") && !shownEverywhere && (
                     <>
                       <Switch size="sm" checked={section.visible} disabled={busyId === section.id} onChange={(v) => void toggle(section, v)} label={section.visible ? "Masquer sur le site" : "Afficher sur le site"} />
                       <IconButton label="Monter" disabled={index === 0} onClick={() => void move(index, -1)} className="ml-1.5">
@@ -154,10 +170,10 @@ export default function PageSectionsPage() {
                       </IconButton>
                     </>
                   )}
-                  <IconButton label={`Modifier ${section.label}`} onClick={() => router.push(`/sections/${section.id}`)}>
+                  <IconButton label={`Modifier ${label}`} onClick={() => router.push(href)}>
                     <Pencil size={15} aria-hidden />
                   </IconButton>
-                  {can("content:structure", "content:delete") && (
+                  {can("content:structure", "content:delete") && !part && (
                     <IconButton label={`Supprimer ${section.label}`} tone="danger" onClick={() => setToDelete(section)}>
                       <Trash2 size={15} aria-hidden />
                     </IconButton>
@@ -165,7 +181,8 @@ export default function PageSectionsPage() {
                 </div>
               </Card>
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
 
