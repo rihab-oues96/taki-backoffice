@@ -14,6 +14,18 @@ export function mediaSrc(url: string): string {
   return siteUrl(url);
 }
 
+/**
+ * A full address of a media library file (as copied from the media details) reduced to the
+ * path stored in content, so usage tracking and file replacement keep working. Other values are returned as is.
+ */
+export function mediaPath(value: string): string {
+  const match = value.match(/^https?:\/\/[^/]+(\/uploads\/[^\s]+)$/i);
+  if (!match) return value;
+  const origin = value.slice(0, value.length - match[1].length);
+  const own = [SITE_URL, typeof window === "undefined" ? "" : window.location.origin];
+  return own.includes(origin) ? match[1] : value;
+}
+
 const dateTime = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" });
 const dateOnly = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" });
 const relative = new Intl.RelativeTimeFormat("fr-FR", { numeric: "auto" });

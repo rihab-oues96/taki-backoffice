@@ -10,7 +10,7 @@ import { ConfirmDialog, Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useQuery } from "@/hooks/useQuery";
-import { formatBytes, formatDateTime } from "@/lib/format";
+import { formatBytes, formatDateTime, siteUrl } from "@/lib/format";
 import type { MediaRule } from "@/lib/types";
 import { mediaApi } from "./api";
 import { MediaThumb } from "./MediaThumb";
@@ -122,22 +122,24 @@ function Details({ id, rules, onClose, onChanged }: { id: string; rules: MediaRu
       </div>
 
       <div className="space-y-5">
-        <Field label="Adresse du média" help="C'est la valeur enregistrée dans les contenus.">
-          <div className="flex gap-2">
-            <Input readOnly value={data.url} onFocus={(e) => e.currentTarget.select()} className="font-mono text-[13px]" />
-            <Button
-              variant="line"
-              size="sm"
-              className="h-11"
-              icon={<Copy size={15} aria-hidden />}
-              onClick={() => {
-                void navigator.clipboard.writeText(data.url).then(() => toast.info("Adresse copiée"));
-              }}
-            >
-              Copier
-            </Button>
-          </div>
-        </Field>
+        {data.kind === "video" && (
+          <Field label="Adresse du média" help="À coller dans un champ vidéo pour utiliser cette vidéo.">
+            <div className="flex gap-2">
+              <Input readOnly value={siteUrl(data.url)} onFocus={(e) => e.currentTarget.select()} className="font-mono text-[13px]" />
+              <Button
+                variant="line"
+                size="sm"
+                className="h-11"
+                icon={<Copy size={15} aria-hidden />}
+                onClick={() => {
+                  void navigator.clipboard.writeText(siteUrl(data.url)).then(() => toast.info("Adresse copiée"));
+                }}
+              >
+                Copier
+              </Button>
+            </div>
+          </Field>
+        )}
         <Field label="Texte alternatif" htmlFor="media-alt" help="Décrit l'image pour les lecteurs d'écran et les moteurs de recherche.">
           <Input id="media-alt" value={alt} disabled={!canWrite} maxLength={300} onChange={(e) => setAlt(e.target.value)} />
         </Field>
