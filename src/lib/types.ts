@@ -241,6 +241,8 @@ export interface SubmissionItem {
   subject: string;
   hasCv: boolean;
   hasNote: boolean;
+  /** The hidden anti-robot field of the form was filled: possibly sent by a robot. */
+  suspect?: boolean;
   createdAt: string;
 }
 

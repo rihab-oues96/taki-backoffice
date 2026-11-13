@@ -214,7 +214,14 @@ export default function SubmissionsPage() {
                     </button>
                   </Td>
                   <Td>
-                    <Badge tone={TYPE_TONES[s.type]}>{TYPE_LABELS[s.type]}</Badge>
+                    <span className="inline-flex flex-wrap items-center gap-1.5">
+                      <Badge tone={TYPE_TONES[s.type]}>{TYPE_LABELS[s.type]}</Badge>
+                      {s.suspect && (
+                        <span title="Le champ anti-robot du formulaire était rempli : envoi automatique possible.">
+                          <Badge tone="warning">À vérifier</Badge>
+                        </span>
+                      )}
+                    </span>
                   </Td>
                   <Td>
                     <span className="block max-w-[280px] truncate text-ink-soft" title={s.subject}>
