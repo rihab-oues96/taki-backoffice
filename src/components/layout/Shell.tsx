@@ -12,6 +12,7 @@ import { pendingTotal, SUBMISSIONS_CHANGED, submissionsApi } from "@/features/su
 import { useQuery } from "@/hooks/useQuery";
 import { cn } from "@/lib/cn";
 import { ROLE_LABELS } from "@/lib/format";
+import { ActiveNavProvider, useActiveNavHref } from "./ActiveNav";
 import { NAV_GROUPS, type NavEntry, type SubLink } from "./nav";
 
 type SubLinks = Partial<Record<NonNullable<NavEntry["children"]>, SubLink[]>>;
@@ -22,14 +23,16 @@ function isActive(pathname: string, item: NavEntry, all: NavEntry[]): boolean {
   if (item.href === "/") return pathname === "/";
   const matches = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   if (!matches(item.href) && !(item.match ?? []).some(matches)) return false;
-  // A more specific entry (e.g. /pages/global vs /pages) wins.
+  // A more specific entry wins over a shorter one matching the same address.
   return !all.some((other) => other !== item && other.href.length > item.href.length && matches(other.href));
 }
 
 type Badges = Partial<Record<NonNullable<NavEntry["badge"]>, number>>;
 
 function Sidebar({ subLinks, badges, onNavigate }: { subLinks: SubLinks; badges: Badges; onNavigate?: () => void }) {
-  const pathname = usePathname();
+  // A screen can say which menu entry it belongs to (section editors: the page of the section).
+  const current = usePathname();
+  const pathname = useActiveNavHref() ?? current;
   const { user, can, logout } = useAuth();
   const viewUrl = useSiteUrl();
   // Submenus the user opened or closed by hand; otherwise a submenu is open while its section is active.
@@ -53,7 +56,7 @@ function Sidebar({ subLinks, badges, onNavigate }: { subLinks: SubLinks; badges:
             <ul className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isActive(pathname, item, all);
-                // Pages that already have their own menu entry (e.g. site settings) are not repeated here.
+                // Pages that already have their own menu entry are not repeated here.
                 const children = (item.children ? subLinks[item.children] ?? [] : []).filter((c) => !all.some((o) => o.href === c.href));
                 const activeChild = active ? children.find((c) => matchesPath(pathname, c.href)) : undefined;
                 const expanded = children.length > 0 && (toggled[item.href] ?? active);
@@ -169,6 +172,14 @@ function Sidebar({ subLinks, badges, onNavigate }: { subLinks: SubLinks; badges:
 
 /** Dashboard frame: fixed sidebar on desktop, drawer on smaller screens, content on the right. */
 export function Shell({ children }: { children: ReactNode }) {
+  return (
+    <ActiveNavProvider>
+      <Frame>{children}</Frame>
+    </ActiveNavProvider>
+  );
+}
+
+function Frame({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { can } = useAuth();

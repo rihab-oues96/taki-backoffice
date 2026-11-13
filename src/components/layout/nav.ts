@@ -1,4 +1,4 @@
-import { FileText, Images, Inbox, LayoutDashboard, Layers, Settings2, UserCog, Users, type LucideIcon } from "lucide-react";
+import { FileText, Images, Inbox, LayoutDashboard, Layers, UserCog, Users, type LucideIcon } from "lucide-react";
 import type { Permission } from "@/lib/types";
 
 export interface NavEntry {
@@ -41,7 +41,6 @@ export const NAV_GROUPS: { title: string; items: NavEntry[] }[] = [
     title: "Administration",
     items: [
       { label: "Utilisateurs", href: "/users", icon: Users, permissions: ["users:read"] },
-      { label: "Réglages du site", href: "/pages/global", icon: Settings2, permissions: ["settings:manage"] },
       { label: "Mon compte", href: "/account", icon: UserCog, permissions: [] },
     ],
   },

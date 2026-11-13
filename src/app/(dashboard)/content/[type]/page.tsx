@@ -2,18 +2,19 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Inbox, Pencil, Plus, Search, Settings2, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, Inbox, Pencil, Plus, Search, Settings2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button, ButtonLink, IconButton } from "@/components/ui/Button";
-import { EmptyState, ErrorState, SkeletonList, StatusBadges } from "@/components/ui/Feedback";
+import { Badge, EmptyState, ErrorState, SkeletonList, StatusBadges } from "@/components/ui/Feedback";
 import { Input, Select, Switch } from "@/components/ui/Form";
-import { PageHeader } from "@/components/ui/Layout";
+import { Card, PageHeader } from "@/components/ui/Layout";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { Pager, Table, Td, Th, Tr } from "@/components/ui/Table";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { RequirePermission } from "@/features/auth/Guard";
-import { contentTypesApi, entriesApi, type EntriesQuery } from "@/features/content/api";
+import { contentTypesApi, entriesApi, sectionsApi, type EntriesQuery } from "@/features/content/api";
+import { partsOnContentType, SHARED_PAGE } from "@/features/content/shared";
 import { StructureModal } from "@/features/content/StructureModal";
 import { MediaThumb } from "@/features/media/MediaThumb";
 import { useDebounced } from "@/hooks/useDebounced";
@@ -38,6 +39,12 @@ export default function EntriesPage() {
 
   const type = useQuery((signal) => contentTypesApi.get(typeKey, signal), [typeKey]);
   const list = useQuery((signal) => entriesApi.list({ type: typeKey, search: debounced, status, page, limit: LIMIT }, signal), [typeKey, debounced, status, page]);
+
+  // Shared blocks shown with this list on the website (e.g. the title above the questions).
+  const hosted = partsOnContentType(typeKey);
+  const needsShared = hosted.length > 0;
+  const shared = useQuery(async (signal) => (needsShared ? sectionsApi.list(SHARED_PAGE, signal) : []), [needsShared]);
+  const blocks = hosted.flatMap((part) => (shared.data ?? []).filter((s) => s.key === part.section).map((section) => ({ section, part })));
 
   const items = list.data?.data ?? [];
   const meta = list.data?.meta;
@@ -116,6 +123,19 @@ export default function EntriesPage() {
           </>
         }
       />
+
+      {blocks.map(({ section, part }) => (
+        <Card key={part.id} className="mb-4 transition hover:border-brand/60">
+          <Link href={`/sections/${section.id}/${part.id}`} className="group flex items-center gap-4 px-5 py-3.5">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-[15.5px] font-semibold text-navy group-hover:text-brand-deep">{part.label}</h2>
+              <p className="truncate text-[13px] text-muted">{part.description}</p>
+            </div>
+            {section.hasDraft && <Badge tone="warning">Brouillon en attente</Badge>}
+            <ChevronRight size={16} className="shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand-deep" aria-hidden />
+          </Link>
+        </Card>
+      ))}
 
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="relative min-w-[220px] flex-1">
